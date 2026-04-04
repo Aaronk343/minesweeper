@@ -10,10 +10,11 @@ class board_class():
         self.mine_count=mine_count
         self.t= t.Turtle()
         screen = t.Screen()
-        screen.screensize(1200, 1200)
+        screen.screensize(1000, 1000)
         self.arrow = t.Turtle()
         self.arrow.hideturtle()
         self.arrow.speed(0)
+        t.tracer(0)
         print(mine_count)
         self.selectAbleSpots=board_size**2-mine_count
         while mine_count!=0:
@@ -22,13 +23,31 @@ class board_class():
             if self.board[y][x]==0:
                 if y==starting_y and x==starting_x:
                     continue
+                if y==starting_y-1 and x==starting_x-1:
+                    continue
+                if y==starting_y-1 and x==starting_x:
+                    continue
+                if y==starting_y-1 and x==starting_x+1:
+                    continue
+                if y==starting_y and x==starting_x-1:
+                    continue
+                if y==starting_y and x==starting_x+1:
+                    continue
+                if y==starting_y+1 and x==starting_x-1:
+                    continue
+                if y==starting_y+1 and x==starting_x:
+                    continue
+                if y==starting_y+1 and x==starting_x+1:
+                    continue
                 mine_count-=1
                 self.board[y][x]="M"
+
         for i in range(board_size):
             for j in range(board_size):
                 if self.board[i][j]!="M":
                     self.add_mines(j, i)
-
+        self.player_board=[[0 for i in range(self.board_size)]for j in range(self.board_size)]
+        self.reveal_tiles(starting_x, starting_y)
     def __str__(self):
         returnstr=""
         for i in range(self.board_size):
@@ -40,22 +59,25 @@ class board_class():
             returnstr+="\n"
         return returnstr
 
-    def reveal_tiles(self, x, y, player_board):
-        player_board[y][x]=1
+    def reveal_tiles(self, x, y):
+        if self.player_board[y][x]==1:
+            return True
+        
         self.selectAbleSpots-=1
         if self.board[y][x]=="M":
             return False
+        self.player_board[y][x]=1
         if self.board[y][x]==0:
             for i in range(x-1,x+2):
                 if i>=0 and i<self.board_size:
                     if y-1>=0:
-                        reveal_tiles(i, y-1, player_board, self.board, self.board_size)
+                        self.reveal_tiles(i, y-1)
                     if y+1<self.board_size:
-                        reveal_tiles(i, y+1, player_board, self.board, self.board_size)
+                        self.reveal_tiles(i, y+1)
                 if i-1>=0:
-                    reveal_tiles(i-1, y, player_board, self.board, self.board_size)
+                    self.reveal_tiles(i-1, y)
                 if i+1<self.board_size:
-                    reveal_tiles(i+1, y, player_board, self.board, self.board_size)
+                    self.reveal_tiles(i+1, y)
             return True 
         else:
             return True   
@@ -76,29 +98,35 @@ class board_class():
         return self.selectAbleSpots==0
 
     def draw_square(self, x ,y, text):
+        
         self.arrow.penup()
         self.arrow.goto(x,y)
         self.arrow.pendown()
-        side_length=1200/self.board_size
+        side_length=1000/self.board_size
+        
         for i in range(4):
+            
             self.arrow.forward(side_length)
             self.arrow.right(90)
         self.arrow.penup()
         self.arrow.goto(x+side_length/2,y-side_length/2)
         self.arrow.write(text)
         self.arrow.pendown()
-        t.done()
+        t.update()
+    
+    def draw_board(self):
+        side_length=1000/self.board_size
+        t.clear()
+        for i in range(self.board_size):
+            for j in range(self.board_size):
+                print(self.board[i][j])
+                if self.player_board[i][j]==1:
+                    self.draw_square((j*side_length)-500, (1000-i*side_length)-500, "" if self.board[i][j]==0 else self.board[i][j] )
+                else:
+                    self.draw_square((j*side_length)-500, (1000-i*side_length)-500, "")
+        
 
 
-def print_grid(grid, player_board):
-    for i in range(len(grid)):
-        for j in range(len(grid)):
-            if player_board[i][j]==0:
-                print("_", end="")
-            else:
-                print(f"{grid[i][j]}", end="")
-        print()
- 
 
 # def mine_sweeper(mine_count, board_size, starting_x, starting_y):
 #     board=[[0 for i in range(board_size)] for j in range(board_size)]
@@ -207,6 +235,7 @@ def main():
     starting_x=int(input("What do you want your starting x-cordinate to be: "))
     starting_y=int(input("What do you want your starting y-cordinate to be: "))
     board=board_class(board_size, bombs, starting_x, starting_y)
-    board.draw_square(0,0, "hi")
+    board.draw_board()
     print(board)
+    t.done()
 main()
