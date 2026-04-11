@@ -8,6 +8,8 @@ class board_class():
         self.board=[[0 for i in range(board_size)] for j in range(board_size)]
         self.board_size=board_size
         self.mine_count=mine_count
+        self.game_over=False
+        self.win=False
         self.t= t.Turtle()
         screen = t.Screen()
         screen.screensize(1000, 1000)
@@ -63,10 +65,11 @@ class board_class():
         if self.player_board[y][x]==1:
             return True
         
-        self.selectAbleSpots-=1
+        
         if self.board[y][x]=="M":
             return False
         self.player_board[y][x]=1
+        self.selectAbleSpots-=1
         if self.board[y][x]==0:
             for i in range(x-1,x+2):
                 if i>=0 and i<self.board_size:
@@ -116,18 +119,63 @@ class board_class():
     
     def draw_board(self):
         side_length=1000/self.board_size
-        t.clear()
+        t.resetscreen()
         for i in range(self.board_size):
             for j in range(self.board_size):
-                print(self.board[i][j])
+                
                 if self.player_board[i][j]==1:
                     self.draw_square((j*side_length)-500, (1000-i*side_length)-500, "" if self.board[i][j]==0 else self.board[i][j] )
+                elif self.player_board[i][j]=="F":
+                    self.draw_square((j*side_length)-500, (1000-i*side_length)-500, "🚩")
+                
                 else:
                     self.draw_square((j*side_length)-500, (1000-i*side_length)-500, "")
+                    
+    
+    def handle_click(self, x, y):
         
-
-
-
+        print(x,y)
+        side_length=1000/self.board_size
+        self.arrow.penup()      
+        box_x=(x+500)/side_length
+        box_y=(500-y)/side_length
+        box_x=int(box_x)
+        box_y=int(box_y)
+        print(box_x, box_y)
+        cond=self.reveal_tiles(box_x, box_y)
+        self.player_board[box_y][box_x]=1
+        if self.board[box_y][box_x]=="M":
+            self.handle_game_over()
+        #handle win
+        self.draw_board()
+        
+    def handle_click_flag(self, x, y):
+        
+        print(x,y)
+        side_length=1000/self.board_size
+        self.arrow.penup()      
+        box_x=(x+500)/side_length
+        box_y=(500-y)/side_length
+        box_x=int(box_x)
+        box_y=int(box_y)
+        print(box_x, box_y)
+        if self.player_board[box_y][box_x]==1:
+            return
+        if self.player_board[box_y][box_x]=="F":
+            self.player_board[box_y][box_x]=0
+        else:
+            self.player_board[box_y][box_x]="F"
+        
+        self.draw_board()
+    def handle_game_over(self):
+        self.t.clear()
+        self.arrow.penup()
+        self.arrow.goto(0,0)
+        self.arrow.pendown()
+        if self.win==True:
+            self.arrow.write("You Win")
+        else:
+            self.arrow.write("You Lose")
 # def mine_sweeper(mine_count, board_size, starting_x, starting_y):
 #     board=[[0 for i in range(board_size)] for j in range(board_size)]
     
@@ -228,8 +276,7 @@ def reveal_tiles(x, y, player_board, board, board_size):
 # main()
 
 def main():
-    game_over=False
-    game_win=False
+    
     board_size=int(input("What board size do you want: "))
     bombs=int((board_size**2)*0.16)
     starting_x=int(input("What do you want your starting x-cordinate to be: "))
@@ -237,5 +284,9 @@ def main():
     board=board_class(board_size, bombs, starting_x, starting_y)
     board.draw_board()
     print(board)
+    
+    board.t.screen.onclick(board.handle_click, btn=1)
+    board.t.screen.onclick(board.handle_click_flag, btn=3)
     t.done()
+
 main()
